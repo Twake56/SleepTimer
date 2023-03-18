@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.navigation.fragment.findNavController
 import com.example.sleeptimer.databinding.FragmentFirstBinding
 import android.content.Context
+import android.content.SharedPreferences
 import android.media.AudioManager
 import android.widget.Button
 import android.widget.NumberPicker
@@ -45,6 +46,7 @@ class FirstFragment : Fragment() {
         startTimerButton = binding.root.findViewById(R.id.StartTimer)
         startTimerButton.setOnClickListener{
             job = CoroutineScope(Dispatchers.Main).launch{
+                saveTimerValue()
                 delay(numberPicker.value.toLong() * 1000)
                 val audioManager = requireActivity().getSystemService(Context.AUDIO_SERVICE) as AudioManager
                 val result: Int = audioManager.requestAudioFocus( null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN )
@@ -59,6 +61,7 @@ class FirstFragment : Fragment() {
             Toast.makeText(activity, "Sleep Timer Cancelled", Toast.LENGTH_SHORT).show()
         }
 
+        loadTimerValue()
         return binding.root
 
     }
@@ -71,6 +74,23 @@ class FirstFragment : Fragment() {
          }*/
     }
 
+    private fun saveTimerValue() {
+        val numberPicker: NumberPicker = binding.root.findViewById(R.id.NumberPicker)
+        val number = numberPicker.value.toLong()
+        val sharedPreferences = this.activity?.getSharedPreferences("sharedPreferences", Context.MODE_PRIVATE)
+        val editor = sharedPreferences?.edit()
+        editor?.apply{
+            putLong("SELECTED_TIME", number)
+        }?.apply()
+        Toast.makeText(activity, "Value Saved", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun loadTimerValue() {
+        val sharedPreferences = activity?.getSharedPreferences("sharedPreferences", Context.MODE_PRIVATE)
+        val previousValue = sharedPreferences?.getLong("SELECTED_TIME", 1)
+        val numberPicker: NumberPicker = binding.root.findViewById(R.id.NumberPicker)
+        numberPicker.value = previousValue?.toInt()?: 1
+    }
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
